@@ -1,0 +1,50 @@
+---
+title: "NYC Dog Bite Prediction"
+author: "Kevin Baca"
+date: "3/7/2019"
+output: 
+  html_document: 
+    theme: lumen
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Likelihood to Bite
+ $\color{gray}{\text{A registered dog’s probability of a biting event based on NYC dog bite data}}$
+
+### Problem
+According to a [survey published by the CDC](https://www.cdc.gov/mmwr/preview/mmwrhtml/mm5226a1.htm), ~4.7 million Americans, ~ 1.8% of the population, were bitten by a dog in 1994, and ~20% of these incidents resulted in some form of medical attention for the victim.  This presents a large potential liability for dog owners, and a significant public safety concern as over 36% of American households now include at least one pet dog. 
+
+Using dog bite data collected by the NYC Health Department, my goal is to assign a probability of a bite incident to each dog registered in New York City. 
+
+### Client Need
+My theoretical client would like to a gain a sense for any given dogs likelihood to bite for insurance purposes or whatever. I don’t actually care about this part of the assignment.
+
+### Proposal 
+By combining a dog bite dataset with a NYC dog registry dataset, the goal is to train a model on the dog bite dataset in order to apply a likelihood to bite prediction each dog in the NYC registry. 
+
+### Datasets
+The two data sets used are provided available at NYC OpenData and both were produced by the NYC Department of Health and Mental Hygiene. 
+
+1. [NYC Reported Dog Bites Dataset](https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg)
+2. [NYC Dog Licensing Dataset](https://data.cityofnewyork.us/Health/NYC-Dog-Licensing-Dataset/nu7n-tubp)
+
+####Structure of NYC Reported Dog Bites Dataset:
+```{r echo=FALSE, message=TRUE, warning=FALSE, paged.print=FALSE}
+library(readr)
+dfnycbite <- read_csv("~/Downloads/DOHMH_Dog_Bite_Data.csv")
+str(dfnycbite)
+```
+
+
+####Structure of NYC Dog Licensing Dataset:
+```{r echo=FALSE, message=TRUE, warning=FALSE, paged.print=TRUE}
+library(readr)
+dfnycdogregistry <- read_csv("~/Downloads/NYC_Dog_Licensing_Dataset.csv")
+str(dfnycdogregistry)
+```
+
+
+
