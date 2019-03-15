@@ -1,0 +1,167 @@
+---
+title: "Data Wrangling Exercise 1"
+author: "Kevin Baca"
+date: "3/9/2019"
+output: 
+  html_document: 
+    theme: simplex
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project: Basic Data Manipulation
+Data wrangling exercise with a toy electronic store dataset. 
+
+####Task Overview
+1. [Load the data in RStudio](#task1)
+2. [Clean up brand names](#task2)
+3. [Separate product code and number](#task3)
+4. [Add product categories](#task4)
+5. [Add full address for geocoding](#task5)
+6. [Create dummy variables for company and product category](#task6)
+7. Submit the project on Github
+
+
+##Task 1 | Load the Data into RStudio {#task1}
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyverse)
+library(readr)
+refinedatasheet1 <- read_csv("~/Downloads/refinedatasheet1.csv")
+refine <- refinedatasheet1
+glimpse(refine)
+```
+
+
+##Task 2 | Cleanup Brand Names {#task2}
+*Clean up the 'company' column so all of the misspellings of the brand names are standardized. 
+*For example, you can transform the values in the column to be: philips, akzo, van houten and unilever (all lowercase).
+```{r}
+#first I want to get a look at the unique observations in the company columnn
+refine %>%  group_by(company) %>% tally
+
+#mutating all of the observations in the company variable to lowercase
+refine <- refine %>% 
+  mutate(company = tolower(company))
+
+#from tobias: I should the `case_when` construction in tandem with the str_detect function from tidyverse.
+#Using this construction, the tilda operator `~` 
+#Note: I'm somewhat dubious about using the company variable as sort of else statement
+refine <- refine %>%
+  mutate(company = case_when(
+    str_detect(company,"ph") ~ "philips",
+    str_detect(company,"fil") ~ "philips",
+    str_detect(company,"ak") ~ "akzo",
+    str_detect(company,"outen") ~ "van houten",
+    str_detect(company,"ver") ~ "unliver",
+    T ~ company))
+         
+#checking the results
+refine %>%  group_by(company) %>% tally
+```
+
+
+##Task 3 | Separate product code and number {#task3}
+*Separate the product code and product number into separate columns i.e. add two new columns called product_code and product_number, containing the product code and number respectively
+
+```{r}
+refine %>% select(`Product code / number`)
+
+# I found this on stackoverflow 
+#I creared a new function called "PEWP" which uses the strsplit function to split each element in the product code column character vector into two distinct substrings
+#note: I could use regx in place for the split, but then no FIXED argument
+PEWP <- strsplit(as.character(refine$`Product code / number`), "-", fixed = TRUE)
+
+#creating two new vectors with sapply from the Split elements
+prod_code <- sapply(PEWP, "[", 1)
+number <- sapply(PEWP, "[", 2)
+
+#attaching the two newly-created vectors to the dataframe to form new columns/variables
+refine <- cbind(refine,prod_code,number)
+
+#viewing new dataframe to spotcheck
+tbl_df(refine)
+```
+
+##Task 4 | Add product categories {#task4}
+*You learn that the product codes actually represent the following product categories:
+**p = Smartphone
+**v = TV
+**x = Laptop
+**q = Tablet
+*In order to make the data more readable, add a column with the product category for each record.
+
+```{r}
+#Using mutate if to coerce all variables to chars
+#note: It would be good to do this 
+refine <- refine %>% 
+  mutate_if(is.factor, as.character) %>% 
+  glimpse()
+
+#using the str_detect function again, I am mutating data to a new column I named "caregory"
+refine <- refine %>%
+  mutate(category = case_when(
+     str_detect(prod_code,"p") ~ "Smartphone",
+     str_detect(prod_code,"v") ~ "TV",
+     str_detect(prod_code, "x") ~ "Laptop",
+     str_detect(prod_code, "q") ~ "Tablet",
+    T ~ prod_code))
+
+# Using Select to view the relevant columns for a spot check
+refine %>% select(company,`Product code / number`,prod_code:category)
+```
+
+
+##Task 5 | Add full address for geocoding {#task5}
+*You'd like to view the customer information on a map. 
+*In order to do that, the addresses need to be in a form that can be easily geocoded. 
+*Create a new column full_address that concatenates the three address fields (address, city, country), separated by commas.
+```{r}
+#viewing columns to understand
+refine %>% select(address:country)
+
+#using tidyverse function unite to assign concatenated values to a new column names "geo""
+refine <- unite(refine,geo,address,city,country,sep = ", ", remove = TRUE)
+
+# Taking a look
+refine %>% select(geo)
+
+```
+
+##task 6 | Create dummy variables for company and product category {#task6}
+
+*Both the _company_ name and _product_ category are categorical variables i.e. they take only a fixed set of values. In order to use them in further analysis you need to create dummy variables. Create dummy binary variables for each of them with the prefix company_ and product_ i.e.,
+
+*Add four binary (1 or 0) columns for company: company_philips, company_akzo, company_van_houten and company_unilever.
+
+*Add four binary (1 or 0) columns for product category: product_smartphone, product_tv, product_laptop and product_tablet.
+
+```{r}
+#to coerce particular columns to factors, I used a stackoverflow tip that required the magrittr library
+library(magrittr)
+# assigned the columns to cols
+cols <- c("company","category")
+# used mutate_each function to convert the cols solumns to factors
+refine %>%
+       mutate_each(funs(factor(.)),cols)
+
+#creates dummy variables and inner join (I don't see the point of a left join here) the spread columns witht the refine table. 
+refine %>% 
+  mutate(var = 1) %>% 
+  spread(company, var, fill = 0, sep = "_") %>% 
+  inner_join(refine) %>% 
+  select(company,7:10)
+
+#creates dummy variables and inner join (I don't see the point of a left join here) the spread columns witht the refine table. 
+refine %>% 
+  mutate(var = 1) %>% 
+  spread(category, var, fill = 0, sep = "_") %>% 
+  inner_join(refine) %>% 
+  select(category,7:10)
+
+```
+
