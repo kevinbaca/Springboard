@@ -1,0 +1,166 @@
+---
+title: "Data Cleaning for the NYC Bite Dataset"
+author: "Kevin Baca"
+date: "3/18/2019"
+output: 
+  html_document: 
+    theme: spacelab
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+### Overview
+* DOHMH Dog Bite Data: [NYC Reported Dog Bites](https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg)
+
+### Index
+1. [Load NYC Dog Bite Data](#1)
+2. [Standardizing the Breed Column](#2)
+
+####Load NYC Dog Bite Data {#1}
+```{r}
+library(dplyr)
+library(tidyverse)
+library(readr)
+nyc_bites <- read_csv("~/Downloads/DOHMH_Dog_Bite_Data.csv")
+
+#View nyc_bite Data Table
+glimpse(nyc_bites)
+tbl_df(nyc_bites)
+```
+
+str_detect(Breed,"^-----$") & str_detect(Breed,"mix",negate = TRUE) ~ "-----",
+
+####Standardizing the Breed Column {#2}
+```{r}
+#Converting Breed values to lowecase
+nyc_bites <- nyc_bites %>% 
+  mutate(Breed = tolower(Breed))
+
+
+#Replacing NAs with "unlisted" in breed column
+nyc_bites <- nyc_bites %>% 
+  mutate(Breed = replace_na(Breed,"unlisted")
+  )
+
+#Creating a new category column to cluster breeds
+#clustered all breeds with at least 10 bite instances
+#note, unlike the other breeds, I made a general match for the word "pit bull" instead of an exact match I need to chage that and clean up pit bull definition
+nyc_bites <- nyc_bites %>% 
+  mutate(category = case_when(
+         str_detect(Breed,"pit bull") & str_detect(Breed,"mix",negate = TRUE) ~ "pit bull",
+         str_detect(Breed,"^shih tzu$") & str_detect(Breed,"mix",negate = TRUE) ~ "shih tzu",
+         str_detect(Breed,"^chihuahua$") | str_detect(Breed, "^chihuahua crossbreed$") & str_detect(Breed,"mix",negate = TRUE) ~"chihuahua",
+         str_detect(Breed,"^german shepherd$") | str_detect(Breed,"^german shepherd crossbreed$") & str_detect(Breed,"mix",negate = TRUE) ~"german sheperd",
+         str_detect(Breed,"^yorkshire terrier$") | str_detect(Breed, "^yorkshire terrier crossbreed$") & str_detect(Breed,"mix",negate = TRUE) ~"yorkshire terrier",
+         str_detect(Breed,"^maltese$") & str_detect(Breed,"mix",negate = TRUE) ~"maltese",
+         str_detect(Breed,"^rottweiler$") & str_detect(Breed,"mix",negate = TRUE) ~"rottweiler",
+         str_detect(Breed,"^labrador retriever$") | str_detect(Breed, "^labrador retriever crossbreed$") & str_detect(Breed,"mix",negate = TRUE) ~"labrador retriever",
+         str_detect(Breed,"^terrier$") & str_detect(Breed,"mix",negate = TRUE) ~ "terrier misc",
+         str_detect(Breed,"^shepherd$") | str_detect(Breed,"^sheperd$") & str_detect(Breed,"mix",negate = TRUE) ~ "shepherd misc",
+         str_detect(Breed,"^bull dog$") |  str_detect(Breed,"^bull dog, english$") & str_detect(Breed,"mix",negate = TRUE) ~"englih bull dog",
+         str_detect(Breed,"^siberian husky$") | str_detect(Breed,"^husky$") & str_detect(Breed,"mix",negate = TRUE) ~"husky",
+         str_detect(Breed,"^bichon frise$") & str_detect(Breed,"mix",negate = TRUE) ~ "bichon frisse",
+         str_detect(Breed,"^bull terrier$") | str_detect(Breed,"^american bully$")& str_detect(Breed,"mix",negate = TRUE) ~ "bull terrier",
+         str_detect(Breed,"^jack russ$") & str_detect(Breed,"mix",negate = TRUE) ~"jack russell",
+         str_detect(Breed,"^poodle, standard$") & str_detect(Breed,"mix",negate = TRUE) ~"standard poodle",
+         str_detect(Breed,"^cocker spaniel$") | str_detect(Breed,"^cocker spaniel crossbreed$") & str_detect(Breed,"mix",negate = TRUE) ~"cocker spaniel",
+         str_detect(Breed,"^american staffordshire terrier$") & str_detect(Breed,"mix",negate = TRUE) ~"pit bull",
+         str_detect(Breed,"^beagle$") | str_detect(Breed,"^beagle crossbreed$") & str_detect(Breed,"mix",negate = TRUE) ~"beagle",
+         str_detect(Breed,"^boxer$") & str_detect(Breed,"mix",negate = TRUE) ~"boxer",
+         str_detect(Breed,"^golden retriever$") & str_detect(Breed,"mix",negate = TRUE) ~"golden retriever",
+         str_detect(Breed,"^west high white terrier$") & str_detect(Breed,"mix",negate = TRUE) ~ "west high white terrier",
+         str_detect(Breed,"^pug$") & str_detect(Breed,"mix",negate = TRUE) ~ "pug",
+         str_detect(Breed,"^great dane$") & str_detect(Breed,"mix",negate = TRUE) ~ "great dane",
+         str_detect(Breed,"^mastiff$") & str_detect(Breed,"mix",negate = TRUE) ~ "mastiff",
+         str_detect(Breed,"^puggle$") & str_detect(Breed,"mix",negate = TRUE) ~ "puggle",
+         str_detect(Breed,"^schnauzer, standard$") & str_detect(Breed,"mix",negate = TRUE) ~ "standard shnauzer",
+         str_detect(Breed,"^collie, border$") & str_detect(Breed,"mix",negate = TRUE) ~ "border collie",
+         str_detect(Breed,"^schnauzer, miniature$") & str_detect(Breed,"mix",negate = TRUE) ~ "miniature schnauzer",
+         str_detect(Breed,"^wheaton terrier$") & str_detect(Breed,"mix",negate = TRUE) ~ "wheaton terrier",
+         str_detect(Breed,"^labradoodle$") & str_detect(Breed,"mix",negate = TRUE) ~ "labradoodle",
+         str_detect(Breed,"rhodesian ridgeback$") & str_detect(Breed,"mix",negate = TRUE) ~ "rhodesian ridgeback",
+         str_detect(Breed,"^dalmatian$") & str_detect(Breed,"mix",negate = TRUE) ~ "dalmatian",
+         str_detect(Breed,"^rat terrier$") & str_detect(Breed,"mix",negate = TRUE) ~ "rat terrier",
+         str_detect(Breed,"^corgi$") & str_detect(Breed,"mix",negate = TRUE) ~ "corgi",
+         str_detect(Breed,"^belgian malinois $") & str_detect(Breed,"mix",negate = TRUE) ~ "belgian malinois ",
+         str_detect(Breed,"^jindo dog,$") & str_detect(Breed,"mix",negate = TRUE) ~ "jindo dog",
+         str_detect(Breed,"^weimaraner$") & str_detect(Breed,"mix",negate = TRUE) ~ "weimaraner",
+         str_detect(Breed,"^shar-pei, chinese$") & str_detect(Breed,"mix",negate = TRUE) ~ "chinese shar_pei",
+         str_detect(Breed,"^cairn terrier$") & str_detect(Breed,"mix",negate = TRUE) ~ "cairn terrier",
+         str_detect(Breed,"^belgian malinois$") & str_detect(Breed,"mix",negate = TRUE) ~ "belgian malinois",
+         str_detect(Breed,"^cock-a-poo$") & str_detect(Breed,"mix",negate = TRUE) ~ "cockapoo",
+         str_detect(Breed,"^morkie$") & str_detect(Breed,"mix",negate = TRUE) ~ "morkie",
+         str_detect(Breed,"^pomeranian$") & str_detect(Breed,"mix",negate = TRUE) ~"pomeranian",
+         str_detect(Breed,"^shiba inu$") & str_detect(Breed,"mix",negate = TRUE) ~"shiba inu",
+         str_detect(Breed,"^bull dog, french$") & str_detect(Breed,"mix",negate = TRUE) ~"french bull dog",
+         str_detect(Breed,"^cane corso$") & str_detect(Breed,"mix",negate = TRUE) ~"cane corso",
+         str_detect(Breed,"^chow chow$") & str_detect(Breed,"mix",negate = TRUE) ~"chow chow",
+         str_detect(Breed,"^miniature pinscher$") & str_detect(Breed,"mix",negate = TRUE) ~"miniature pinscher",
+         str_detect(Breed,"^boston terrier$") & str_detect(Breed,"mix",negate = TRUE) ~"boston terrier",
+         str_detect(Breed,"^doberman pinscher$") & str_detect(Breed,"mix",negate = TRUE) ~"doberman pinscher",
+         str_detect(Breed,"^lhasa apso$") & str_detect(Breed,"mix",negate = TRUE) ~"lhasa apso",
+         str_detect(Breed,"^dachshund smooth coat$") & str_detect(Breed,"mix",negate = TRUE) ~"dachshund smooth coat",
+         str_detect(Breed,"^poodle, miniature$") | str_detect(Breed,"poodle, toy") & str_detect(Breed,"mix",negate = TRUE) ~"miniature poodle",
+         str_detect(Breed,"^akita$") & str_detect(Breed,"mix",negate = TRUE) ~"akita",
+         str_detect(Breed,"^pekingese$") & str_detect(Breed,"mix",negate = TRUE) ~"pekingese",
+         str_detect(Breed,"^havanese$") & str_detect(Breed,"mix",negate = TRUE) ~"havanese",
+         str_detect(Breed,"^mastiff, bull$") & str_detect(Breed,"mix",negate = TRUE) ~"bull mastiff",
+         str_detect(Breed,"^staffordshire bull terrier$") & str_detect(Breed,"mix",negate = TRUE) ~"staffordshire bull terrier",
+         str_detect(Breed,"^australian shepherd$") & str_detect(Breed,"mix",negate = TRUE) ~"australian shepherd",
+         str_detect(Breed,"mix") | str_detect(Breed,"mutt") ~ "mix",
+         str_detect(Breed,"unlisted") | str_detect(Breed,"unknown")~ "unlisted",
+         T ~ "other"
+  ))
+
+ #summaring categories
+ katz <- nyc_bites %>% group_by(category) %>% 
+  summarise(cat_count =n()) %>% 
+  arrange(desc(cat_count))
+ 
+ print(katz,n=100)
+
+ 
+
+ 
+
+```
+
+
+##checking output post cleanup
+
+```{r}
+
+#summaring pits
+ pitz <- nyc_bites %>% group_by(Breed,category) %>% 
+  summarise(breed_count =n()) %>% 
+  filter(str_detect(Breed,"pit bull")) %>% 
+  arrange(desc(breed_count))
+ 
+ print(pitz, n=100)
+
+ #summaring categories
+ katz <- nyc_bites %>% group_by(category) %>% 
+  summarise(cat_count =n()) %>% 
+  arrange(desc(cat_count))
+ 
+ print(katz,n=100)
+
+ doggoz <- nyc_bites %>% group_by(Breed,category) %>% 
+  summarise(breed_count =n()) %>% 
+  filter(str_detect(category,"other") && breed_count > 9) %>% 
+  arrange(desc(breed_count))
+ 
+ print(doggoz,n=100)
+ 
+
+```
+
+
