@@ -1,0 +1,127 @@
+---
+title: "Titanic Exercise"
+author: "Kevin Baca"
+date: "3/18/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Project: Data Wrangling Exercise 2: Dealing with missing values
+*Using R, you’ll be handling missing values in this data set, and creating a new data set. 
+
+### Task Overview
+* 1. [Import Data](#task1)
+* 2. [Port of embarkation](#task2)
+* 3. [Age](#task3)
+* 4. [Lifeboat](#task4)
+* 5. [Cabin](#task5)
+
+#####1. Import Data {#task1}
+* Save the data set as a CSV file called titanic_original.csv and load it in RStudio into a data frame.
+
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyverse)
+library(readr)
+titanic3 <- read_csv("~/Downloads/titanic3.csv")
+titanic <- titanic3
+tbl_df(titanic)
+```
+
+####2. Port of embarkation {#task2}
+*The embarked column has some missing values, which are known to correspond to passengers who actually embarked at Southampton. 
+
+*Find the missing values and replace them with S. (Caution: Sometimes a missing value might be read into R as a blank or empty string.)
+
+```{r}
+#taking a look at the embarked column
+titanic %>% group_by(embarked) %>% tally
+
+#find and replace empty values in `embarked` column using transmute. 
+# NOTE: Transmute will replace the entire dataframe with just the embarked column
+titanic <- titanic %>% 
+  mutate(embarked = replace_na(embarked,"S"))
+
+#Check again
+titanic %>% group_by(embarked) %>% tally
+```
+
+####3. Age {#task3}
+*You’ll notice that a lot of the values in the Age column are missing. While there are many ways to fill these missing values, using the mean or median of the rest of the values is quite common in such cases.
+
+*Calculate the mean of the Age column and use that value to populate the missing values
+
+*Think about other ways you could have populated the missing values in the age column. Why would you pick any of those over the mean (or not)?
+
+```{r}
+#finding the mean age
+titanic %>% select(age) %>% 
+  summarise(mean(age,na.rm=TRUE))
+
+#using base R to find the number of NAs in the age column
+sum(is.na(titanic$age))
+
+#using dyplr to find the number of NAs in the age column
+titanic %>% count(is.na(age))
+
+#replace NA values in age column with the mean age 
+#rather than just plugging in the number I'm replacing with the `mean(age,na.rm=TRUE)`
+#Note: this replace_na function would have failed had I not made it explict that I was replacing NAs with the meean age where where na.rm = TRUE because th e aggregate function fails if you don't skip the NAs
+titanic <- titanic %>% 
+  mutate(age = replace_na(age,mean(age,na.rm=TRUE)))
+
+#checking to see if those NAs are gone
+titanic %>% count(is.na(age))
+```
+
+####4. Lifeboat {#task4}
+*You’re interested in looking at the distribution of passengers in different lifeboats, but as we know, many passengers did not make it to a boat. 
+
+*This means that there are a lot of missing values in the boat column. Fill these empty slots with a dummy value e.g. the string 'None' or 'NA'
+
+```{r}
+# taking a look at the boat column (there are 823 NAs)
+titanic %>% group_by(boat) %>% tally()
+
+#replacing NAs (i.e. NULL values) with the string "No_Boat"
+titanic <- titanic %>% 
+  mutate(boat = replace_na(boat,"No_Boat"))
+
+#Confirming all 823 NAs have a value of "No_Boat" 
+titanic %>% select(boat) %>% 
+  filter(boat == "No_Boat") %>% tally
+```
+
+####5. Cabin {#task5}
+*You notice that many passengers don’t have a cabin number associated with them.
+
+*Does it make sense to fill missing cabin numbers with a value?
+
+*What does a missing value here mean?
+
+*You have a hunch that the fact that the cabin number is missing might be a useful indicator of survival. Create a new column has_cabin_number which has 1 if there is a cabin number, and 0 otherwise.
+
+```{r}
+#adding a new column calles has_cabin_number where there is a character 1 (not a numeric)
+titanic <- titanic %>% 
+  mutate(has_cabin_number = case_when(
+    is.na(cabin) ~ "0", 
+    T ~"1"
+  ))
+
+#checking work
+titanic %>% select(name,cabin,has_cabin_number) %>% 
+  arrange(desc(name))
+
+new_titanic <- titanic
+
+#writing to csv:
+write_csv(titanic, path="~/r/export_folder/titanic_clean.csv")
+
+read_csv()
+```
