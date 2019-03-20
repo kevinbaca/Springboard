@@ -55,7 +55,7 @@ nyc_bites <- nyc_bites %>%
 #note, unlike the other breeds, I made a general match for the word "pit bull" instead of an exact match I need to chage that and clean up pit bull definition
 nyc_bites <- nyc_bites %>% 
   mutate(category = case_when(
-         str_detect(Breed,"pit bull") & str_detect(Breed,"mix",negate = TRUE) ~ "pit bull",
+         str_detect(Breed,"^pit bull$") | str_detect(Breed,"^american pit bull terrier/pit bull$") | str_detect(Breed,"^pit bull terrier$") & str_detect(Breed,"mix",negate = TRUE) ~ "pit bull",
          str_detect(Breed,"^shih tzu$") & str_detect(Breed,"mix",negate = TRUE) ~ "shih tzu",
          str_detect(Breed,"^chihuahua$") | str_detect(Breed, "^chihuahua crossbreed$") & str_detect(Breed,"mix",negate = TRUE) ~"chihuahua",
          str_detect(Breed,"^german shepherd$") | str_detect(Breed,"^german shepherd crossbreed$") & str_detect(Breed,"mix",negate = TRUE) ~"german sheperd",
@@ -90,13 +90,12 @@ nyc_bites <- nyc_bites %>%
          str_detect(Breed,"^dalmatian$") & str_detect(Breed,"mix",negate = TRUE) ~ "dalmatian",
          str_detect(Breed,"^rat terrier$") & str_detect(Breed,"mix",negate = TRUE) ~ "rat terrier",
          str_detect(Breed,"^corgi$") & str_detect(Breed,"mix",negate = TRUE) ~ "corgi",
-         str_detect(Breed,"^belgian malinois $") & str_detect(Breed,"mix",negate = TRUE) ~ "belgian malinois ",
          str_detect(Breed,"^jindo dog,$") & str_detect(Breed,"mix",negate = TRUE) ~ "jindo dog",
          str_detect(Breed,"^weimaraner$") & str_detect(Breed,"mix",negate = TRUE) ~ "weimaraner",
          str_detect(Breed,"^shar-pei, chinese$") & str_detect(Breed,"mix",negate = TRUE) ~ "chinese shar_pei",
          str_detect(Breed,"^cairn terrier$") & str_detect(Breed,"mix",negate = TRUE) ~ "cairn terrier",
          str_detect(Breed,"^belgian malinois$") & str_detect(Breed,"mix",negate = TRUE) ~ "belgian malinois",
-         str_detect(Breed,"^cock-a-poo$") & str_detect(Breed,"mix",negate = TRUE) ~ "cockapoo",
+         str_detect(Breed,"^cock-a-poo$") | str_detect(Breed,"^cockapoo$") & str_detect(Breed,"mix",negate = TRUE) ~ "cockapoo",
          str_detect(Breed,"^morkie$") & str_detect(Breed,"mix",negate = TRUE) ~ "morkie",
          str_detect(Breed,"^pomeranian$") & str_detect(Breed,"mix",negate = TRUE) ~"pomeranian",
          str_detect(Breed,"^shiba inu$") & str_detect(Breed,"mix",negate = TRUE) ~"shiba inu",
@@ -120,15 +119,6 @@ nyc_bites <- nyc_bites %>%
          T ~ "other"
   ))
 
- #summaring categories
- katz <- nyc_bites %>% group_by(category) %>% 
-  summarise(cat_count =n()) %>% 
-  arrange(desc(cat_count))
- 
- print(katz,n=100)
-
- 
-
  
 
 ```
@@ -138,7 +128,7 @@ nyc_bites <- nyc_bites %>%
 
 ```{r}
 
-#summaring pits
+#summarising pits
  pitz <- nyc_bites %>% group_by(Breed,category) %>% 
   summarise(breed_count =n()) %>% 
   filter(str_detect(Breed,"pit bull")) %>% 
@@ -146,19 +136,20 @@ nyc_bites <- nyc_bites %>%
  
  print(pitz, n=100)
 
- #summaring categories
+ #summarising categories
  katz <- nyc_bites %>% group_by(category) %>% 
   summarise(cat_count =n()) %>% 
   arrange(desc(cat_count))
  
  print(katz,n=100)
 
+ #summarising uncategorized
  doggoz <- nyc_bites %>% group_by(Breed,category) %>% 
   summarise(breed_count =n()) %>% 
-  filter(str_detect(category,"other") && breed_count > 9) %>% 
+  filter(str_detect(category,"other") && breed_count > 1) %>% 
   arrange(desc(breed_count))
  
- print(doggoz,n=100)
+ print(doggoz,n=135)
  
 
 ```
