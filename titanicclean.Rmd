@@ -1,0 +1,20 @@
+---
+title: "titprac"
+author: "Kevin Baca"
+date: "3/30/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## titanic practice
+
+```{r}
+library(readr)
+titanic_clean <- read_csv("titanic_clean.csv")
+View(titanic_clean)
+```
